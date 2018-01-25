@@ -1,6 +1,6 @@
 import numpy as np
 from glob import glob
-from util import take_ave, plot_figure
+from util import *
 
 """
 Process channel flow data.
@@ -13,19 +13,21 @@ y     -- y coordinates              {ndarray of size Ny X 1}
 
 Calculate:
 
-U_ave     -- Mean velocity              {ndarray of size Ny X 3}
-J_ave     -- Mean velocity gradient     {ndarray of size Ny X 3 x 3}
-Res_ave   -- Reynolds stresses          {ndarray of size Ny X 3 X 3}
-tke       -- Turbulence kinetic energy  {ndarray of size Ny X 1}
-epsilon   -- Dissipation rate           {ndarray of size Ny X 1}
-tau_wall  -- Wall shear stress          {scalar}
-u_tau     -- Friction velocity          {scalar}
-delta_nu  -- Viscous length scale       {scalar}
+U_ave     -- Mean velocity                {ndarray of size Ny X 3}
+J_ave     -- Mean velocity gradient       {ndarray of size Ny X 3 x 3}
+Res_ave   -- Reynolds stresses            {ndarray of size Ny X 3 X 3}
+tke       -- Turbulence kinetic energy    {ndarray of size Ny X 1}
+b         -- Normalized anisotropy tensor {ndarray of size Ny X 3 X 3}
+epsilon   -- Dissipation rate             {ndarray of size Ny X 1}
+tau_wall  -- Wall shear stress            {scalar}
+u_tau     -- Friction velocity            {scalar}
+delta_nu  -- Viscous length scale         {scalar}
 
 Output:
 
-1. profiles of mean velocities, Reynolds stresses and normalized anisotropy stress tensor in original or viscous units
+1. profiles of mean velocities, Reynolds stresses and normalized anisotropy stress tensors in original or viscous units
 2. txt file consisting of y, tke, epsilon, J_ave and Res_ave
+3. txt file consisting of coarse-grained y, tke, epsilon, J_ave and Res_ave
 """
 
 
@@ -93,7 +95,7 @@ print('Viscous length scale: %s' % delta_nu_calc)
 filename = '../Data/raw_82X512X31/profiles_'+str(Nt)+'frames.png'
 plot_figure(y, U_ave, Res_ave, b, delta_nu_calc, u_tau_calc, tke, scale='viscous', fname=filename)
 
-# Output txt file
+# Output data
 header = 'y, tke, epsilon, grad_u_11, grad_u_12, grad_u_13, grad_u_21, grad_u_22, grad_u_23, \
 grad_u_31, grad_u_32, grad_u_33, uu_11, uu_12, uu_13, uu_21, uu_22, uu_23, uu_31, uu_32, uu_33'
 output_array = np.zeros((y.shape[0], 21))
@@ -103,3 +105,23 @@ output_array[:, 2] = epsilon
 output_array[:, 3:12] = J_ave.reshape(J_ave.shape[0], 9)
 output_array[:, 12:] = Res_ave.reshape(Res_ave.shape[0], 9)
 np.savetxt('../Data/JHTDB_channel_82X512X31_'+str(Nt)+'frames.txt', output_array, header=header)
+
+# Output coarse-grained data
+n = 3  # sample size to average
+
+tke_cg = downsample(tke, n)
+epsilon_cg = downsample(epsilon, n)
+J_ave_cg = downsample(J_ave.reshape(J_ave.shape[0], 9), n)
+
+y_cg = y[n//2::n][:tke_cg.shape[0]]
+Res_ave_cg = Res_ave.reshape(Res_ave.shape[0], 9)[n//2::n][:tke_cg.shape[0]]
+
+output_array_cg = np.zeros((tke_cg.shape[0], 21))
+output_array_cg[:, 0] = y_cg
+output_array_cg[:, 1] = tke_cg
+output_array_cg[:, 2] = epsilon_cg
+output_array_cg[:, 3:12] = J_ave_cg
+output_array_cg[:, 12:] = Res_ave_cg
+np.savetxt('../Data/JHTDB_channel_82X512X31_'+str(Nt)+'frames_cg.txt', output_array_cg, header=header)
+
+

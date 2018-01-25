@@ -34,7 +34,7 @@ total_times = np.array(list(range(4000)), dtype = np.float32) * 0.0065
 Nx, Ny, Nz = 80, 512, 30
 
 # Specify desired time frames (list of integers between 0 and 3999)
-frames = [499, 699, 899]
+frames = [3099, 3299, 3499, 3699, 3899]
 
 # Calculate corresponding stride size
 sx = xnodes.shape[0] // Nx

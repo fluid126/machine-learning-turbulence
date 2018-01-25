@@ -85,39 +85,39 @@ def plot_figure(y, U_ave, Res_ave, b, delta_nu, u_tau, tke, scale, fname):
     fig = plt.figure(figsize=(15, 5))
 
     if scale == 'original':
-        fig.suptitle('Channel flow profiles of mean velocities, Reynolds stresses and normalized anisotropy stress \
-tensor in original units')
+#         fig.suptitle('Channel flow profiles of mean velocities, Reynolds stresses and normalized anisotropy stress \
+# tensor in original units')
 
         ax = fig.add_subplot(131)
         ax.plot(y, U_ave)
         ax.set_xlabel('y')
         ax.set_ylabel(r'$<U_i>$')
-        # ax.set_title('Mean velocity profile')
+        ax.set_title('mean velocity')
         ax.legend(['U', 'V', 'W'], loc='best')
 
         ax = fig.add_subplot(132)
         ax.plot(y, Re_11, y, Re_22, y, Re_33, y, Re_12)
         ax.set_xlabel('y')
         ax.set_ylabel(r'$<u_i u_j>$')
-        # ax.set_title('Reynolds stress profile')
+        ax.set_title('Reynolds stresses')
         ax.legend(['uu', 'vv', 'ww', 'uv'], loc='best')
 
         ax = fig.add_subplot(133)
         ax.plot(y, b_11, y, b_22, y, b_33, y, b_12)
         ax.set_xlabel('y')
         ax.set_ylabel(r'$\frac{<u_i u_j>}{2k} - \frac{1}{3}\delta_{ij}$')
-        # ax.set_title('Normalized anisotropy tensor profile')
+        ax.set_title('normalized anisotropy tensors')
         ax.legend(['$b_{uu}$', '$b_{vv}$', '$b_{ww}$', '$b_{uv}$'], loc='best')
 
     if scale == 'viscous':
-        fig.suptitle('Channel flow profiles of mean velocities, Reynolds stresses and normalized anisotropy stress \
-tensor in viscous units')
+#         fig.suptitle('Channel flow profiles of mean velocities, Reynolds stresses and normalized anisotropy stress \
+# tensor in viscous units')
 
         ax = fig.add_subplot(131)
         ax.plot((y + 1) / delta_nu, U_ave / u_tau)
         ax.set_xlabel('y+')
         ax.set_ylabel(r'$<U_i>/u_{\tau}$')
-        # ax.set_title('Mean velocity profile')
+        ax.set_title('mean velocity')
         ax.legend(['U+', 'V+', 'W+'], loc='best')
 
         ax = fig.add_subplot(132)
@@ -128,7 +128,7 @@ tensor in viscous units')
         ax.plot((y + 1) / delta_nu, tke / (u_tau ** 2), label='k+')
         ax.set_xlabel('y+')
         ax.set_ylabel(r'$<u_i u_j>/u_{\tau}^2$')
-        # ax.set_title('Reynolds stresses profile')
+        ax.set_title('Reynolds stresses')
         ax.legend(loc='best')
 
         ax = fig.add_subplot(133)
@@ -138,10 +138,30 @@ tensor in viscous units')
         ax.plot((y + 1) / delta_nu, b_12, label='$b_{uv}$')
         ax.set_xlabel('y+')
         ax.set_ylabel(r'$\frac{<u_i u_j>}{2k} - \frac{1}{3}\delta_{ij}$')
-        # ax.set_title('Anisotropy tensors profile')
+        ax.set_title('normalized anisotropy tensors')
         ax.legend(loc='best')
 
     plt.tight_layout(w_pad=3.0, rect=[0.02, 0, 0.98, 0.93])
 
     plt.savefig(fname, dpi=200)
     plt.show()
+
+
+def downsample(arr, n):
+    """
+    Downsample data -- take average of every n elements/rows in a given 1D/2D array.
+    :param arr: 1D or 2D array to be downsampled
+    :param n: sample size
+    :return: new 1D or 2D array
+    """
+
+    # ignore leftovers if n does not divide array length
+    end = n * int(arr.shape[0]/n)
+
+    if arr.ndim == 1:
+        new_arr = np.mean(arr[:end].reshape(-1, n), axis=1)
+    if arr.ndim == 2:
+        new_arr = np.mean(arr[:end].transpose().reshape(-1, n), axis=1).reshape(arr.shape[1], -1).transpose()
+
+    return new_arr
+
